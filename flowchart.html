@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOC SENTINEL // Flowchart</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cyan: #00f5ff;
+    --green: #39ff14;
+    --pink: #ff0080;
+    --orange: #ff9900;
+    --purple: #bf00ff;
+    --bg: #030508;
+    --bg2: #080d14;
+    --bg3: #0d1520;
+    --border: rgba(0,245,255,0.2);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: #c0d8e8;
+    font-family: 'Rajdhani', sans-serif;
+    overflow-x: hidden;
+    cursor: crosshair;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,255,0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px);
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 40px;
+    background: rgba(3,5,8,0.94);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+  }
+
+  .nav-logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--cyan);
+    text-shadow: 0 0 10px var(--cyan);
+    letter-spacing: 4px;
+    text-decoration: none;
+  }
+
+  .nav-logo span { color: var(--pink); }
+
+  .nav-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--bg);
+    background: var(--pink);
+    border: none;
+    padding: 8px 18px;
+    cursor: pointer;
+    text-decoration: none;
+    clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+    transition: background 0.2s;
+    display: inline-block;
+  }
+
+  .nav-btn:hover { background: var(--cyan); }
+
+  .page-header {
+    position: relative;
+    z-index: 2;
+    padding: 120px 60px 40px;
+    text-align: center;
+  }
+
+  .page-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: var(--pink);
+    text-shadow: 0 0 10px var(--pink);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .page-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(28px, 5vw, 56px);
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 4px;
+    margin-bottom: 12px;
+  }
+
+  .page-title span { color: var(--cyan); text-shadow: 0 0 20px var(--cyan); }
+
+  .page-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: #3a5a6a;
+    text-transform: uppercase;
+    margin-bottom: 60px;
+  }
+
+  /* LEGEND */
+  .legend {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 0 40px 40px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #7a9bb0;
+    text-transform: uppercase;
+  }
+
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  /* FLOWCHART CONTAINER */
+  .flowchart-wrap {
+    position: relative;
+    z-index: 2;
+    padding: 0 20px 80px;
+    overflow-x: auto;
+  }
+
+  .flowchart-inner {
+    min-width: 900px;
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  /* NODE STYLES */
+  .fc-row {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 0;
+    position: relative;
+  }
+
+  .fc-node {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .fc-node:hover .node-inner { transform: scale(1.05); filter: brightness(1.3); }
+
+  .node-inner {
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 20px;
+    gap: 6px;
+  }
+
+  /* SHAPES */
+  .shape-rect {
+    background: var(--bg3);
+    border: 1.5px solid var(--cyan);
+    box-shadow: 0 0 15px rgba(0,245,255,0.15), inset 0 0 20px rgba(0,245,255,0.04);
+    width: 155px;
+    min-height: 70px;
+  }
+
+  .shape-rect.pink {
+    border-color: var(--pink);
+    box-shadow: 0 0 15px rgba(255,0,128,0.15), inset 0 0 20px rgba(255,0,128,0.04);
+  }
+
+  .shape-rect.green {
+    border-color: var(--green);
+    box-shadow: 0 0 15px rgba(57,255,20,0.15), inset 0 0 20px rgba(57,255,20,0.04);
+  }
+
+  .shape-rect.orange {
+    border-color: var(--orange);
+    box-shadow: 0 0 15px rgba(255,153,0,0.15), inset 0 0 20px rgba(255,153,0,0.04);
+  }
+
+  .shape-rect.purple {
+    border-color: var(--purple);
+    box-shadow: 0 0 15px rgba(191,0,255,0.15), inset 0 0 20px rgba(191,0,255,0.04);
+  }
+
+  .shape-rect.wide { width: 320px; }
+  .shape-rect.mega { width: 680px; min-height: 80px; }
+
+  .shape-hex {
+    background: var(--bg3);
+    border: 1.5px solid var(--pink);
+    box-shadow: 0 0 20px rgba(255,0,128,0.2), inset 0 0 30px rgba(255,0,128,0.05);
+    width: 160px;
+    min-height: 80px;
+    clip-path: polygon(15% 0%, 85% 0%, 100% 50%, 85% 100%, 15% 100%, 0% 50%);
+  }
+
+  .shape-diamond {
+    background: var(--bg3);
+    border: 1.5px solid var(--orange);
+    box-shadow: 0 0 20px rgba(255,153,0,0.2);
+    width: 180px;
+    height: 120px;
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  }
+
+  .shape-trapezoid {
+    background: var(--bg3);
+    border: 1.5px solid var(--green);
+    box-shadow: 0 0 15px rgba(57,255,20,0.2);
+    width: 280px;
+    min-height: 60px;
+    clip-path: polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%);
+  }
+
+  .shape-ellipse {
+    background: var(--bg3);
+    border: 1.5px solid var(--cyan);
+    box-shadow: 0 0 12px rgba(0,245,255,0.2);
+    border-radius: 50%;
+    width: 70px;
+    height: 70px;
+  }
+
+  .node-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: var(--cyan);
+    line-height: 1.3;
+    text-transform: uppercase;
+  }
+
+  .node-label.pink { color: var(--pink); }
+  .node-label.green { color: var(--green); }
+  .node-label.orange { color: var(--orange); }
+  .node-label.purple { color: var(--purple); }
+  .node-label.white { color: #fff; font-size: 11px; }
+
+  .node-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 8.5px;
+    color: #4a6f8a;
+    line-height: 1.4;
+    margin-top: 2px;
+  }
+
+  /* CONNECTOR ARROWS */
+  .connector {
+    display: flex;
+    justify-content: center;
+    margin: 6px 0;
+    position: relative;
+  }
+
+  .arrow-down {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  .arrow-line {
+    width: 2px;
+    background: linear-gradient(180deg, var(--cyan), rgba(0,245,255,0.3));
+    animation: lineFlow 2s linear infinite;
+  }
+
+  @keyframes lineFlow {
+    0% { box-shadow: 0 0 4px var(--cyan); }
+    50% { box-shadow: 0 0 12px var(--cyan), 0 0 24px rgba(0,245,255,0.4); }
+    100% { box-shadow: 0 0 4px var(--cyan); }
+  }
+
+  .arrow-line.pink { background: linear-gradient(180deg, var(--pink), rgba(255,0,128,0.3)); }
+  .arrow-line.pink { animation: lineFlowPink 2s linear infinite; }
+
+  @keyframes lineFlowPink {
+    0% { box-shadow: 0 0 4px var(--pink); }
+    50% { box-shadow: 0 0 12px var(--pink); }
+    100% { box-shadow: 0 0 4px var(--pink); }
+  }
+
+  .arrow-head {
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 10px solid var(--cyan);
+    filter: drop-shadow(0 0 4px var(--cyan));
+  }
+
+  .arrow-head.pink { border-top-color: var(--pink); filter: drop-shadow(0 0 4px var(--pink)); }
+  .arrow-head.green { border-top-color: var(--green); filter: drop-shadow(0 0 4px var(--green)); }
+
+  /* MULTI-CONNECTOR (fan out / fan in) */
+  .fan-wrap {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+  }
+
+  /* SVG CONNECTOR LAYER */
+  .svg-connectors {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    overflow: visible;
+  }
+
+  /* TOOLTIP */
+  .tooltip {
+    position: fixed;
+    background: rgba(3,5,8,0.97);
+    border: 1px solid var(--cyan);
+    box-shadow: 0 0 20px rgba(0,245,255,0.2);
+    padding: 14px 18px;
+    max-width: 280px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: #7aacbf;
+    line-height: 1.6;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .tooltip.visible { opacity: 1; }
+  .tooltip strong { color: var(--cyan); display: block; margin-bottom: 6px; }
+
+  /* SECTION BLOCKS */
+  .fc-section {
+    background: rgba(0,245,255,0.02);
+    border: 1px solid rgba(0,245,255,0.08);
+    border-radius: 2px;
+    padding: 28px 20px;
+    margin-bottom: 0;
+    position: relative;
+  }
+
+  .fc-section-label {
+    position: absolute;
+    top: -12px;
+    left: 20px;
+    background: var(--bg);
+    padding: 0 10px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--cyan);
+    text-transform: uppercase;
+  }
+
+  .fc-section.pink { border-color: rgba(255,0,128,0.12); }
+  .fc-section.pink .fc-section-label { color: var(--pink); }
+  .fc-section.green { border-color: rgba(57,255,20,0.1); }
+  .fc-section.green .fc-section-label { color: var(--green); }
+
+  /* PARTICLE */
+  .particle {
+    position: fixed;
+    width: 2px;
+    height: 2px;
+    background: var(--cyan);
+    border-radius: 50%;
+    box-shadow: 0 0 6px var(--cyan);
+    animation: particleFloat linear infinite;
+    pointer-events: none;
+    z-index: 500;
+  }
+
+  @keyframes particleFloat {
+    0% { transform: translateY(0) translateX(0); opacity: 0; }
+    10% { opacity: 0.8; }
+    90% { opacity: 0.4; }
+    100% { transform: translateY(-100vh) translateX(20px); opacity: 0; }
+  }
+
+  /* SPACING UTILS */
+  .mb-8 { margin-bottom: 8px; }
+  .mb-16 { margin-bottom: 16px; }
+  .mb-32 { margin-bottom: 32px; }
+  .mt-8 { margin-top: 8px; }
+
+  .flex-center { display: flex; justify-content: center; align-items: center; }
+  .flex-gap { gap: 12px; }
+
+  .phase-bar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    justify-content: center;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+
+  .phase-item {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  .phase-dot {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #3a5a6a;
+    padding: 4px 12px;
+    border: 1px solid rgba(0,245,255,0.1);
+    white-space: nowrap;
+  }
+
+  .phase-dot.active { color: var(--cyan); border-color: rgba(0,245,255,0.4); }
+  .phase-arrow { color: #2a3a4a; padding: 0 4px; font-size: 12px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .page-header { padding: 100px 24px 30px; }
+    nav { padding: 12px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">SOC<span>//</span>SENTINEL</a>
+  <a href="index.html" class="nav-btn">← BACK TO MAIN</a>
+</nav>
+
+<div class="page-header">
+  <div class="page-label">&gt;_ SYSTEM ARCHITECTURE // INTERACTIVE FLOWCHART</div>
+  <h1 class="page-title">DATA <span>FLOW</span> DIAGRAM</h1>
+  <p class="page-sub">// HOVER NODES FOR DETAILS // KERNEL-LEVEL SOC TELEMETRY PIPELINE //</p>
+
+  <div class="phase-bar">
+    <div class="phase-item"><span class="phase-dot active">COLLECTION</span></div>
+    <div class="phase-arrow">▶</div>
+    <div class="phase-item"><span class="phase-dot active">KERNEL PROCESSING</span></div>
+    <div class="phase-arrow">▶</div>
+    <div class="phase-item"><span class="phase-dot active">CORRELATION</span></div>
+    <div class="phase-arrow">▶</div>
+    <div class="phase-item"><span class="phase-dot active">AI / OPENCTI</span></div>
+    <div class="phase-arrow">▶</div>
+    <div class="phase-item"><span class="phase-dot active">SOC DASHBOARD</span></div>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--cyan);box-shadow:0 0 8px var(--cyan)"></div>Endpoints / Core</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--pink);box-shadow:0 0 8px var(--pink)"></div>Correlation / Processing</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--green);box-shadow:0 0 8px var(--green)"></div>Output / Display</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--orange);box-shadow:0 0 8px var(--orange)"></div>AI / Intelligence</div>
+</div>
+
+<div class="flowchart-wrap">
+<div class="flowchart-inner">
+
+<!-- PHASE 1: ENDPOINTS -->
+<div class="fc-section mb-32" style="margin-bottom:0;">
+  <div class="fc-section-label">PHASE 1 // KERNEL ENDPOINT COLLECTION</div>
+  <div class="fc-row" style="gap:10px;justify-content:center;padding-top:8px;">
+
+    <div class="fc-node" data-tip="Process Endpoint" data-info="Microsoft-Windows-Kernel-Process provider via ETW session. GUID: 22FB2CD6-0E7B-422B-A0C7-2FAD1FD0E716. Monitors all process creation, termination, and thread activity at kernel level.">
+      <div class="node-inner shape-rect" style="width:140px;min-height:80px;">
+        <div style="font-size:22px;">🖥️</div>
+        <div class="node-label">PROCESS<br>ENDPOINT</div>
+        <div class="node-sub">ETW // Kernel-Process</div>
+      </div>
+    </div>
+
+    <div class="fc-node" data-tip="Network Endpoint" data-info="Npcap (NDIS packet filter driver) + IP Helper API. Captures packets via pcap_loop on all network adapters. No pure ETW — operates at NDIS filter driver level.">
+      <div class="node-inner shape-rect" style="width:140px;min-height:80px;">
+        <div style="font-size:22px;">🌐</div>
+        <div class="node-label">NETWORK<br>ENDPOINT</div>
+        <div class="node-sub">Npcap // NDIS</div>
+      </div>
+    </div>
+
+    <div class="fc-node" data-tip="Application Log Endpoint" data-info="Microsoft-Windows-PowerShell + WMI-Activity (ETW) + Security & Windows Defender channels. Collected via ETW + EvtSubscribe (Windows Event Log).">
+      <div class="node-inner shape-rect" style="width:140px;min-height:80px;">
+        <div style="font-size:22px;">📋</div>
+        <div class="node-label">APP LOG<br>ENDPOINT</div>
+        <div class="node-sub">ETW + EvtSubscribe</div>
+      </div>
+    </div>
+
+    <div class="fc-node" data-tip="File Endpoint (FIM)" data-info="Microsoft-Windows-Kernel-File provider via ETW session. GUID: EDD08927-9CC4-4E65-B970-C2560FB5C289. Tracks file create, write, delete, rename events at kernel level.">
+      <div class="node-inner shape-rect" style="width:140px;min-height:80px;">
+        <div style="font-size:22px;">📁</div>
+        <div class="node-label">FILE (FIM)<br>ENDPOINT</div>
+        <div class="node-sub">ETW // Kernel-File</div>
+      </div>
+    </div>
+
+    <div class="fc-node" data-tip="USB Endpoint" data-info="WM_DEVICECHANGE (PnP kernel notifications) + SetupDi APIs. Uses Win32 hidden window + ReadDirectoryChangesW to detect USB device insertion, removal, and storage access.">
+      <div class="node-inner shape-rect" style="width:140px;min-height:80px;">
+        <div style="font-size:22px;">🔌</div>
+        <div class="node-label">USB<br>ENDPOINT</div>
+        <div class="node-sub">PnP + SetupDi</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CONNECTORS → KERNEL DRIVERS -->
+<div class="connector" style="height:50px;position:relative;">
+  <svg width="100%" height="50" style="position:absolute;top:0;left:0;overflow:visible;">
+    <defs>
+      <marker id="arrow-cyan" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <polygon points="0,0 8,4 0,8" fill="#00f5ff" opacity="0.8"/>
+      </marker>
+    </defs>
+    <!-- 5 lines converging to center -->
+    <line x1="10%" y1="0" x2="50%" y2="50" stroke="rgba(0,245,255,0.5)" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-cyan)"/>
+    <line x1="28%" y1="0" x2="50%" y2="50" stroke="rgba(0,245,255,0.5)" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-cyan)"/>
+    <line x1="50%" y1="0" x2="50%" y2="50" stroke="rgba(0,245,255,0.8)" stroke-width="2" marker-end="url(#arrow-cyan)"/>
+    <line x1="72%" y1="0" x2="50%" y2="50" stroke="rgba(0,245,255,0.5)" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-cyan)"/>
+    <line x1="90%" y1="0" x2="50%" y2="50" stroke="rgba(0,245,255,0.5)" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-cyan)"/>
+  </svg>
+</div>
+
+<!-- PHASE 2: KERNEL DRIVERS -->
+<div class="fc-section mb-32" style="margin-bottom:0;">
+  <div class="fc-section-label">PHASE 2 // KERNEL DRIVER LAYER</div>
+  <div class="fc-row" style="padding:8px 0;">
+    <div class="fc-node" data-tip="Kernel Drivers" data-info="The unified kernel driver layer aggregates telemetry from all 5 endpoints. Manages ETW sessions, Npcap sessions, EvtSubscribe handles, and PnP window message loops simultaneously.">
+      <div class="node-inner shape-rect mega" style="background:rgba(0,245,255,0.05);">
+        <div style="font-size:26px;">⚙️</div>
+        <div class="node-label white" style="font-size:14px;">KERNEL DRIVERS</div>
+        <div class="node-sub" style="font-size:9px;">ETW Sessions // Npcap // EvtSubscribe // PnP Window // ReadDirectoryChangesW</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONNECTOR → JSON/JSONL -->
+<div class="connector" style="height:44px;position:relative;">
+  <div class="arrow-down">
+    <div class="arrow-line" style="height:30px;"></div>
+    <div class="arrow-head"></div>
+  </div>
+</div>
+
+<!-- PHASE 3: DATA SERIALISATION -->
+<div class="fc-section mb-32" style="margin-bottom:0;border-color:rgba(57,255,20,0.12);">
+  <div class="fc-section-label" style="color:var(--green);">PHASE 3 // DATA SERIALISATION</div>
+  <div class="fc-row" style="padding:8px 0;justify-content:center;gap:24px;">
+
+    <div class="fc-node" data-tip="JSON / JSONL Output" data-info="All endpoint data is serialised to JSON / JSONL (JSON Lines) format. Each event becomes a structured record with timestamp, endpoint type, event data, and process context. Saved to disk and streamed to the correlator.">
+      <div class="node-inner shape-trapezoid" style="padding:16px 36px;">
+        <div class="node-label green" style="font-size:12px;">JSON / JSONL LOGS</div>
+        <div class="node-sub">All endpoints generate structured log files</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CONNECTOR → CORRELATOR -->
+<div class="connector" style="height:44px;position:relative;">
+  <div class="arrow-down">
+    <div class="arrow-line pink" style="height:30px;"></div>
+    <div class="arrow-head pink"></div>
+  </div>
+</div>
+
+<!-- PHASE 4: CORRELATOR -->
+<div class="fc-section mb-32" style="margin-bottom:0;border-color:rgba(255,0,128,0.12);">
+  <div class="fc-section-label pink">PHASE 4 // EVENT CORRELATION ENGINE</div>
+  <div class="fc-row" style="padding:8px 0;justify-content:center;gap:40px;align-items:center;">
+
+    <div class="fc-node" data-tip="Correlator" data-info="The CORRELATOR is the heart of the pipeline. It takes multiple log streams from all endpoints and correlates them using common key points (PID, timestamp, hostname, network session, file path) to build unified security incidents from disparate events.">
+      <div class="node-inner shape-hex" style="padding:14px 24px;width:180px;min-height:90px;">
+        <div style="font-size:22px;">🔗</div>
+        <div class="node-label pink" style="font-size:11px;">CORRELATOR</div>
+        <div class="node-sub">Multi-log correlation</div>
+      </div>
+    </div>
+
+    <div style="max-width:320px;padding:16px 20px;background:rgba(255,0,128,0.04);border:1px solid rgba(255,0,128,0.15);">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--pink);margin-bottom:8px;">// CORRELATED OUTPUT</div>
+      <div style="font-family:'Rajdhani',sans-serif;font-size:13px;color:#8aacbf;line-height:1.7;">Takes multiple logs from all endpoints and correlates them using <span style="color:var(--pink)">common key points</span> — then groups them into a unified security incident record for analysis.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CONNECTOR → LAYER 2 DASHBOARD -->
+<div class="connector" style="height:44px;position:relative;">
+  <div class="arrow-down">
+    <div class="arrow-line" style="height:30px;background:linear-gradient(180deg,var(--orange),rgba(255,153,0,0.3));"></div>
+    <div class="arrow-head" style="border-top-color:var(--orange);filter:drop-shadow(0 0 4px var(--orange));"></div>
+  </div>
+</div>
+
+<!-- PHASE 5: LAYER 2 DASHBOARD -->
+<div class="fc-section mb-32" style="margin-bottom:0;border-color:rgba(255,153,0,0.12);">
+  <div class="fc-section-label" style="color:var(--orange);">PHASE 5 // LAYER 2 — PROCESSING DASHBOARD</div>
+  <div class="fc-row" style="padding:8px 0;justify-content:center;gap:20px;flex-wrap:wrap;">
+
+    <div class="fc-node" data-tip="Global Filter" data-info="The Global Filter applies system-wide filtering rules before events enter the AI analysis engine. Reduces noise, enforces whitelists/blacklists, and focuses the pipeline on security-relevant events.">
+      <div class="node-inner shape-rect orange" style="width:180px;min-height:90px;">
+        <div style="font-size:20px;">🌍</div>
+        <div class="node-label orange">GLOBAL FILTER</div>
+        <div class="node-sub">Noise reduction // Rule-based filtering</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;font-size:22px;color:rgba(255,153,0,0.4);">→</div>
+
+    <div class="fc-node" data-tip="AI / OpenCTI — Validation & Pattern Matching" data-info="AI model trained on historical attack data performs validation and pattern matching. OpenCTI threat intelligence integration enriches events with known IOCs, TTPs, and threat actor profiles for accurate classification.">
+      <div class="node-inner shape-rect orange" style="width:220px;min-height:90px;border-color:var(--orange);box-shadow:0 0 20px rgba(255,153,0,0.2);">
+        <div style="font-size:20px;">🤖</div>
+        <div class="node-label orange">AI / OPENCTI</div>
+        <div class="node-sub">Validation + Pattern Matching</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;font-size:22px;color:rgba(255,0,128,0.4);">→</div>
+
+    <div class="fc-node" data-tip="Layer 2 Correlator" data-info="Secondary correlator within the dashboard layer. Re-correlates AI-enriched events with global filter output to produce refined, high-confidence security alerts ready for analyst review.">
+      <div class="node-inner shape-rect pink" style="width:160px;min-height:90px;">
+        <div style="font-size:20px;">🔗</div>
+        <div class="node-label pink">CORRELATOR</div>
+        <div class="node-sub">Dashboard-level correlation</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CONNECTOR → LAYER 1 -->
+<div style="display:flex;justify-content:center;gap:120px;position:relative;height:60px;margin:0;">
+  <svg width="100%" height="60" style="position:absolute;top:0;left:0;overflow:visible;">
+    <defs>
+      <marker id="arrow-green" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <polygon points="0,0 8,4 0,8" fill="#39ff14" opacity="0.9"/>
+      </marker>
+      <marker id="arrow-pink2" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <polygon points="0,0 8,4 0,8" fill="#ff0080" opacity="0.9"/>
+      </marker>
+    </defs>
+    <line x1="35%" y1="0" x2="25%" y2="60" stroke="rgba(57,255,20,0.6)" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-green)"/>
+    <line x1="50%" y1="0" x2="50%" y2="60" stroke="rgba(255,0,128,0.8)" stroke-width="2" marker-end="url(#arrow-pink2)"/>
+    <line x1="65%" y1="0" x2="75%" y2="60" stroke="rgba(57,255,20,0.6)" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-green)"/>
+  </svg>
+</div>
+
+<!-- PHASE 6: LAYER 1 + SOC DASHBOARD (side by side) -->
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;position:relative;z-index:2;">
+
+  <div class="fc-section" style="border-color:rgba(57,255,20,0.12);">
+    <div class="fc-section-label green">LAYER 1 // INTERFACE</div>
+    <div style="padding-top:8px;display:flex;flex-direction:column;gap:12px;">
+      <div class="fc-node" style="width:100%;" data-tip=".EXE Process Display" data-info="All running processes and their .exe files are displayed in the interface with full process tree, parent-child relationships, memory usage, and network connections.">
+        <div class="node-inner shape-rect green" style="width:100%;min-height:70px;">
+          <div style="font-size:18px;">📋</div>
+          <div class="node-label green" style="font-size:9px;">ALL .EXE DISPLAYED</div>
+          <div class="node-sub">Process tree interface</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fc-section" style="border-color:rgba(255,0,128,0.15);">
+    <div class="fc-section-label pink">SOC DASHBOARD</div>
+    <div style="padding-top:8px;display:flex;flex-direction:column;gap:10px;">
+      <div class="fc-node" style="width:100%;" data-tip="AI Score Allocation" data-info="Trained AI model allocates threat scores to every log entry. Identifies pattern-based attacks and ranks events by severity and confidence. Higher score = more suspicious.">
+        <div class="node-inner shape-rect pink" style="width:100%;min-height:60px;">
+          <div class="node-label pink" style="font-size:9px;">AI SCORE ALLOCATION</div>
+          <div class="node-sub">Pattern-based attack ID</div>
+        </div>
+      </div>
+      <div class="fc-node" style="width:100%;" data-tip="OpenCTI Prediction" data-info="Uses OpenCTI threat intelligence data to predict threats before they materialise. Forecasts potential attacks based on current environment state and known threat actor TTPs.">
+        <div class="node-inner shape-rect" style="width:100%;min-height:60px;border-color:var(--orange);box-shadow:0 0 12px rgba(255,153,0,0.1);">
+          <div class="node-label orange" style="font-size:9px;">OPENCTI PREDICTION</div>
+          <div class="node-sub">Threat forecasting</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fc-section" style="border-color:rgba(57,255,20,0.12);">
+    <div class="fc-section-label green">LAYER 1 // ALERTS</div>
+    <div style="padding-top:8px;display:flex;flex-direction:column;gap:12px;">
+      <div class="fc-node" style="width:100%;" data-tip="Alert Surface" data-info="Final output: correlated, AI-scored alerts surfaced to SOC analysts with full context, predicted next steps, vulnerability mapping, and recommended response actions.">
+        <div class="node-inner shape-rect green" style="width:100%;min-height:70px;">
+          <div style="font-size:18px;">🚨</div>
+          <div class="node-label green" style="font-size:9px;">ALERT SURFACE</div>
+          <div class="node-sub">SOC Analyst View</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FINAL CONNECTOR → AI OUTPUT -->
+<div class="connector" style="height:44px;position:relative;margin-top:16px;">
+  <div class="arrow-down">
+    <div class="arrow-line" style="height:30px;background:linear-gradient(180deg,var(--purple),rgba(191,0,255,0.3));"></div>
+    <div class="arrow-head" style="border-top-color:var(--purple);filter:drop-shadow(0 0 4px var(--purple));"></div>
+  </div>
+</div>
+
+<!-- FINAL OUTPUT -->
+<div class="fc-section" style="border-color:rgba(191,0,255,0.2);background:rgba(191,0,255,0.03);">
+  <div class="fc-section-label" style="color:var(--purple);">FINAL OUTPUT // AI INTELLIGENCE SUMMARY</div>
+  <div style="padding:12px 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+
+    <div style="padding:16px;background:rgba(191,0,255,0.05);border:1px solid rgba(191,0,255,0.2);">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--purple);margin-bottom:8px;">// SUSPICIOUS ACTIVITY</div>
+      <div style="font-size:12px;color:#8aacbf;line-height:1.6;">AI flags suspicious activities and events with confidence scores, full context, and source endpoint attribution.</div>
+    </div>
+
+    <div style="padding:16px;background:rgba(255,153,0,0.05);border:1px solid rgba(255,153,0,0.2);">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--orange);margin-bottom:8px;">// VULNERABILITY PREDICTION</div>
+      <div style="font-size:12px;color:#8aacbf;line-height:1.6;">Identifies vulnerable areas and loopholes, predicts which attack vectors are most likely to be exploited given the current environment.</div>
+    </div>
+
+    <div style="padding:16px;background:rgba(57,255,20,0.03);border:1px solid rgba(57,255,20,0.15);">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--green);margin-bottom:8px;">// THREAT NEXT-STEP PREDICTION</div>
+      <div style="font-size:12px;color:#8aacbf;line-height:1.6;">If a virus is detected, the AI predicts its next move — enabling SOC analysts to get ahead of the threat before propagation.</div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /flowchart-inner -->
+</div><!-- /flowchart-wrap -->
+
+<!-- TOOLTIP -->
+<div class="tooltip" id="tooltip">
+  <strong id="tip-title"></strong>
+  <span id="tip-body"></span>
+</div>
+
+<!-- PARTICLES -->
+<script>
+  // Tooltip logic
+  const tooltip = document.getElementById('tooltip');
+  const tipTitle = document.getElementById('tip-title');
+  const tipBody = document.getElementById('tip-body');
+
+  document.querySelectorAll('.fc-node[data-tip]').forEach(node => {
+    node.addEventListener('mouseenter', e => {
+      tipTitle.textContent = node.dataset.tip;
+      tipBody.textContent = node.dataset.info;
+      tooltip.classList.add('visible');
+    });
+    node.addEventListener('mousemove', e => {
+      let x = e.clientX + 16;
+      let y = e.clientY + 16;
+      if (x + 300 > window.innerWidth) x = e.clientX - 300;
+      if (y + 120 > window.innerHeight) y = e.clientY - 120;
+      tooltip.style.left = x + 'px';
+      tooltip.style.top = y + 'px';
+    });
+    node.addEventListener('mouseleave', () => {
+      tooltip.classList.remove('visible');
+    });
+  });
+
+  // Floating particles
+  function createParticle() {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.bottom = '-4px';
+    const dur = 6 + Math.random() * 8;
+    p.style.animationDuration = dur + 's';
+    p.style.animationDelay = Math.random() * 3 + 's';
+    if (Math.random() > 0.6) { p.style.background = 'var(--pink)'; p.style.boxShadow = '0 0 6px var(--pink)'; }
+    if (Math.random() > 0.8) { p.style.background = 'var(--green)'; p.style.boxShadow = '0 0 6px var(--green)'; }
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), dur * 1000 + 3000);
+  }
+
+  setInterval(createParticle, 600);
+
+  // Animate arrow lines periodically
+  const lines = document.querySelectorAll('.arrow-line');
+  lines.forEach(l => {
+    l.style.height = '0px';
+    setTimeout(() => { l.style.transition = 'height 0.6s ease'; l.style.height = '30px'; }, 300);
+  });
+</script>
+</body>
+</html>

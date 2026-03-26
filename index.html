@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOC SENTINEL // Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cyan: #00f5ff;
+    --green: #39ff14;
+    --pink: #ff0080;
+    --orange: #ff6600;
+    --bg: #030508;
+    --bg2: #080d14;
+    --bg3: #0d1520;
+    --border: rgba(0,245,255,0.25);
+    --glow-c: 0 0 10px #00f5ff, 0 0 30px rgba(0,245,255,0.4);
+    --glow-g: 0 0 10px #39ff14, 0 0 30px rgba(57,255,20,0.3);
+    --glow-p: 0 0 10px #ff0080, 0 0 30px rgba(255,0,128,0.4);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: #c0d8e8;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  /* GRID BACKGROUND */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* SCANLINES */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.18) 2px,
+      rgba(0,0,0,0.18) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 40px;
+    background: rgba(3,5,8,0.92);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+  }
+
+  .nav-logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--cyan);
+    text-shadow: var(--glow-c);
+    letter-spacing: 4px;
+    text-decoration: none;
+  }
+
+  .nav-logo span { color: var(--pink); text-shadow: var(--glow-p); }
+
+  nav ul {
+    list-style: none;
+    display: flex;
+    gap: 32px;
+  }
+
+  nav ul li a {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: #7a9bb0;
+    text-decoration: none;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: color 0.2s, text-shadow 0.2s;
+    position: relative;
+  }
+
+  nav ul li a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: var(--cyan);
+    box-shadow: var(--glow-c);
+    transition: width 0.3s;
+  }
+
+  nav ul li a:hover { color: var(--cyan); }
+  nav ul li a:hover::after { width: 100%; }
+
+  .nav-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--bg);
+    background: var(--cyan);
+    border: none;
+    padding: 8px 18px;
+    cursor: pointer;
+    text-decoration: none;
+    clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+    transition: background 0.2s, box-shadow 0.2s;
+    display: inline-block;
+  }
+
+  .nav-btn:hover {
+    background: var(--green);
+    box-shadow: var(--glow-g);
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 100px 40px 60px;
+    position: relative;
+    text-align: center;
+  }
+
+  .hero-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: var(--green);
+    text-shadow: var(--glow-g);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    animation: fadeUp 0.8s ease forwards;
+  }
+
+  .hero-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(36px, 6vw, 80px);
+    font-weight: 900;
+    line-height: 1.05;
+    color: #fff;
+    margin-bottom: 8px;
+    animation: fadeUp 0.9s ease forwards;
+    position: relative;
+  }
+
+  .hero-title .glitch {
+    color: var(--cyan);
+    text-shadow: var(--glow-c);
+    position: relative;
+    display: inline-block;
+  }
+
+  .hero-title .glitch::before,
+  .hero-title .glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    animation: glitch 3s infinite;
+  }
+
+  .hero-title .glitch::before {
+    color: var(--pink);
+    clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+    animation-delay: 0.1s;
+    left: 2px;
+  }
+
+  .hero-title .glitch::after {
+    color: var(--green);
+    clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+    animation-delay: 0.2s;
+    left: -2px;
+  }
+
+  @keyframes glitch {
+    0%, 90%, 100% { transform: translate(0); opacity: 1; }
+    91% { transform: translate(-3px, 1px); opacity: 0.8; }
+    93% { transform: translate(3px, -1px); opacity: 0.9; }
+    95% { transform: translate(0); opacity: 1; }
+  }
+
+  .hero-sub {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(16px, 2.5vw, 28px);
+    font-weight: 400;
+    color: #4a6f8a;
+    letter-spacing: 8px;
+    margin-bottom: 40px;
+    animation: fadeUp 1s ease forwards;
+  }
+
+  .hero-desc {
+    max-width: 680px;
+    font-size: 16px;
+    line-height: 1.8;
+    color: #7a9bb0;
+    margin-bottom: 48px;
+    animation: fadeUp 1.1s ease forwards;
+  }
+
+  .hero-badges {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 60px;
+    animation: fadeUp 1.2s ease forwards;
+  }
+
+  .badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 5px 14px;
+    border: 1px solid var(--border);
+    color: var(--cyan);
+    clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+  }
+
+  .badge.pink { color: var(--pink); border-color: rgba(255,0,128,0.25); }
+  .badge.green { color: var(--green); border-color: rgba(57,255,20,0.25); }
+
+  .hero-scroll {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: #3a5a6a;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* CORNER DECORATION */
+  .corner {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border-color: var(--cyan);
+    border-style: solid;
+    opacity: 0.5;
+  }
+  .corner-tl { top: 110px; left: 40px; border-width: 2px 0 0 2px; }
+  .corner-tr { top: 110px; right: 40px; border-width: 2px 2px 0 0; }
+  .corner-bl { bottom: 60px; left: 40px; border-width: 0 0 2px 2px; }
+  .corner-br { bottom: 60px; right: 40px; border-width: 0 2px 2px 0; }
+
+  /* SECTIONS */
+  section {
+    position: relative;
+    z-index: 2;
+    padding: 100px 60px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    margin-bottom: 60px;
+    position: relative;
+    padding-left: 24px;
+  }
+
+  .section-header::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--cyan), var(--pink));
+    box-shadow: 0 0 12px var(--cyan);
+  }
+
+  .section-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 5px;
+    color: var(--green);
+    text-shadow: var(--glow-g);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .section-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(22px, 3vw, 36px);
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 2px;
+  }
+
+  .section-title span { color: var(--cyan); }
+
+  /* CARDS */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .card:hover { border-color: rgba(0,245,255,0.5); box-shadow: 0 0 30px rgba(0,245,255,0.08); }
+  .card:hover::before { opacity: 1; }
+
+  /* ENDPOINTS GRID */
+  .endpoints-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
+
+  .endpoint-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 24px;
+    position: relative;
+    clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px);
+    transition: all 0.3s;
+  }
+
+  .endpoint-card:hover {
+    border-color: var(--cyan);
+    box-shadow: 0 0 20px rgba(0,245,255,0.1), inset 0 0 30px rgba(0,245,255,0.03);
+  }
+
+  .ep-number {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--pink);
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+  }
+
+  .ep-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--cyan);
+    text-shadow: 0 0 8px rgba(0,245,255,0.4);
+    margin-bottom: 14px;
+  }
+
+  .ep-source {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--green);
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+
+  .ep-method {
+    font-size: 13px;
+    color: #7a9bb0;
+    line-height: 1.6;
+  }
+
+  .ep-guid {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: #3a5570;
+    margin-top: 10px;
+    word-break: break-all;
+  }
+
+  /* DATA FLOW */
+  .flow-strip {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 28px 36px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  .flow-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 120px;
+    padding: 16px 8px;
+    text-align: center;
+  }
+
+  .flow-icon {
+    width: 48px;
+    height: 48px;
+    border: 2px solid var(--cyan);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    box-shadow: var(--glow-c);
+    background: rgba(0,245,255,0.05);
+    margin-bottom: 4px;
+  }
+
+  .flow-icon.pink { border-color: var(--pink); box-shadow: var(--glow-p); background: rgba(255,0,128,0.05); }
+  .flow-icon.green { border-color: var(--green); box-shadow: var(--glow-g); background: rgba(57,255,20,0.05); }
+  .flow-icon.orange { border-color: var(--orange); background: rgba(255,102,0,0.05); }
+
+  .flow-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--cyan);
+    text-transform: uppercase;
+  }
+
+  .flow-label.pink { color: var(--pink); }
+  .flow-label.green { color: var(--green); }
+  .flow-label.orange { color: var(--orange); }
+
+  .flow-arrow {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 20px;
+    color: var(--border);
+    flex: 0 0 auto;
+    animation: arrowPulse 1.5s infinite;
+  }
+
+  @keyframes arrowPulse {
+    0%, 100% { color: rgba(0,245,255,0.15); }
+    50% { color: rgba(0,245,255,0.5); }
+  }
+
+  /* LAYERS */
+  .layers-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .layer-box {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 32px;
+    position: relative;
+  }
+
+  .layer-tag {
+    position: absolute;
+    top: -14px;
+    left: 24px;
+    background: var(--bg);
+    padding: 0 12px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    color: var(--pink);
+    text-shadow: var(--glow-p);
+  }
+
+  .layer-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 20px;
+  }
+
+  .layer-items {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .layer-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(0,245,255,0.03);
+    border-left: 2px solid var(--cyan);
+  }
+
+  .layer-item.pink { border-color: var(--pink); }
+  .layer-item.green { border-color: var(--green); }
+
+  .layer-item-icon { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+
+  .layer-item-content h4 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--cyan);
+    margin-bottom: 4px;
+  }
+
+  .layer-item.pink h4 { color: var(--pink); }
+  .layer-item.green h4 { color: var(--green); }
+
+  .layer-item-content p {
+    font-size: 13px;
+    color: #7a9bb0;
+    line-height: 1.6;
+  }
+
+  /* SOC DASHBOARD */
+  .soc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .soc-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .soc-card::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 60px; height: 60px;
+    background: radial-gradient(circle at top right, rgba(0,245,255,0.08), transparent 70%);
+  }
+
+  .soc-card.pink::after { background: radial-gradient(circle at top right, rgba(255,0,128,0.08), transparent 70%); }
+  .soc-card.full { grid-column: 1 / -1; }
+
+  .soc-card-icon {
+    font-size: 32px;
+    margin-bottom: 16px;
+  }
+
+  .soc-card-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--cyan);
+    margin-bottom: 12px;
+  }
+
+  .soc-card.pink .soc-card-title { color: var(--pink); }
+  .soc-card.green .soc-card-title { color: var(--green); }
+
+  .soc-card p {
+    font-size: 14px;
+    color: #7a9bb0;
+    line-height: 1.8;
+  }
+
+  .feature-list {
+    list-style: none;
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .feature-list li {
+    display: flex;
+    gap: 10px;
+    font-size: 14px;
+    color: #7a9bb0;
+    line-height: 1.6;
+  }
+
+  .feature-list li::before {
+    content: '▶';
+    color: var(--cyan);
+    font-size: 10px;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+
+  .feature-list.pink li::before { color: var(--pink); }
+  .feature-list.green li::before { color: var(--green); }
+
+  /* TABLE */
+  .cyber-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+  }
+
+  .cyber-table thead tr {
+    background: rgba(0,245,255,0.08);
+    border-bottom: 2px solid var(--cyan);
+  }
+
+  .cyber-table thead th {
+    padding: 14px 16px;
+    text-align: left;
+    color: var(--cyan);
+    letter-spacing: 2px;
+    font-size: 10px;
+    text-transform: uppercase;
+  }
+
+  .cyber-table tbody tr {
+    border-bottom: 1px solid rgba(0,245,255,0.08);
+    transition: background 0.2s;
+  }
+
+  .cyber-table tbody tr:hover {
+    background: rgba(0,245,255,0.04);
+  }
+
+  .cyber-table tbody td {
+    padding: 16px;
+    vertical-align: top;
+    line-height: 1.6;
+    color: #8aacbf;
+  }
+
+  .cyber-table tbody td:first-child {
+    color: var(--pink);
+    font-weight: bold;
+  }
+
+  .cyber-table tbody td:nth-child(2) { color: var(--green); }
+
+  /* VIDEO SECTION */
+  #video {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 100px 60px;
+    position: relative;
+    overflow: hidden;
+    z-index: 2;
+  }
+
+  #video::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(0,245,255,0.04) 0%, transparent 70%);
+  }
+
+  .video-wrap {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .video-container {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%;
+    background: #000;
+    border: 2px solid var(--border);
+    box-shadow: 0 0 60px rgba(0,245,255,0.12);
+    overflow: hidden;
+  }
+
+  .video-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    background: #000;
+  }
+
+  .video-placeholder-icon {
+    width: 80px;
+    height: 80px;
+    border: 2px solid var(--cyan);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    box-shadow: var(--glow-c);
+    animation: pulseBorder 2s infinite;
+  }
+
+  @keyframes pulseBorder {
+    0%, 100% { box-shadow: var(--glow-c); }
+    50% { box-shadow: 0 0 30px rgba(0,245,255,0.7), 0 0 60px rgba(0,245,255,0.3); }
+  }
+
+  .video-placeholder p {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 4px;
+    color: #3a5570;
+    text-transform: uppercase;
+  }
+
+  /* Replace the placeholder with an actual iframe when ready */
+  .video-container iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 2;
+    padding: 40px 60px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    font-weight: 900;
+    color: var(--cyan);
+    letter-spacing: 4px;
+  }
+
+  .footer-logo span { color: var(--pink); }
+
+  .footer-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #2a3a4a;
+    text-transform: uppercase;
+  }
+
+  /* SEPARATOR */
+  .sep {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 60px;
+  }
+
+  .sep-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border));
+  }
+
+  .sep-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--cyan);
+    box-shadow: var(--glow-c);
+    transform: rotate(45deg);
+  }
+
+  /* STAT ROW */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    margin-bottom: 80px;
+  }
+
+  .stat-item {
+    background: var(--bg3);
+    padding: 28px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+
+  .stat-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--cyan);
+    text-shadow: var(--glow-c);
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .stat-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #4a6f8a;
+    text-transform: uppercase;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    section { padding: 60px 24px; }
+    .layers-wrap, .soc-grid { grid-template-columns: 1fr; }
+    .soc-card.full { grid-column: 1; }
+    .stat-row { grid-template-columns: 1fr 1fr; }
+    nav ul { display: none; }
+  }
+
+  /* ANIMATED BORDER */
+  .anim-border {
+    position: relative;
+  }
+
+  .anim-border::before,
+  .anim-border::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1px solid transparent;
+  }
+
+  .anim-border::before {
+    border-top-color: var(--cyan);
+    border-right-color: var(--cyan);
+    animation: borderAnim1 2s linear infinite;
+  }
+
+  .anim-border::after {
+    border-bottom-color: var(--pink);
+    border-left-color: var(--pink);
+    animation: borderAnim2 2s linear infinite;
+  }
+
+  @keyframes borderAnim1 {
+    0% { clip-path: inset(0 100% 100% 0); }
+    25% { clip-path: inset(0 0 100% 0); }
+    50% { clip-path: inset(0 0 0 0); }
+    75% { clip-path: inset(0 0 0 100%); }
+    100% { clip-path: inset(0 100% 0 100%); }
+  }
+
+  @keyframes borderAnim2 {
+    0% { clip-path: inset(100% 0 0 100%); }
+    25% { clip-path: inset(100% 0 0 0); }
+    50% { clip-path: inset(0 0 0 0); }
+    75% { clip-path: inset(0 100% 0 0); }
+    100% { clip-path: inset(0 100% 100% 0); }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-logo">SOC<span>//</span>SENTINEL</a>
+  <ul>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#endpoints">Endpoints</a></li>
+    <li><a href="#layers">Layers</a></li>
+    <li><a href="#soc">SOC Dashboard</a></li>
+    <li><a href="#video">Demo</a></li>
+  </ul>
+  <a href="flowchart.html" class="nav-btn">VIEW FLOWCHART →</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="corner corner-tl"></div>
+  <div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div>
+  <div class="corner corner-br"></div>
+
+  <div class="hero-tag">&gt;_ SECURITY OPERATIONS CENTER // KERNEL-LEVEL TELEMETRY SYSTEM</div>
+  <h1 class="hero-title">
+    <span class="glitch" data-text="SOC SENTINEL">SOC SENTINEL</span>
+  </h1>
+  <div class="hero-sub">WORKFLOW &amp; ARCHITECTURE</div>
+  <p class="hero-desc">
+    A kernel-level security monitoring application that collects multi-source endpoint telemetry,
+    correlates events using AI-driven pattern matching with OpenCTI threat intelligence,
+    and surfaces actionable insights to SOC analysts in real-time.
+  </p>
+  <div class="hero-badges">
+    <span class="badge">ETW TELEMETRY</span>
+    <span class="badge pink">AI / OPENCTI</span>
+    <span class="badge green">REAL-TIME CORRELATION</span>
+    <span class="badge">JSON / JSONL LOGS</span>
+    <span class="badge pink">NPCAP CAPTURE</span>
+    <span class="badge green">KERNEL DRIVERS</span>
+  </div>
+  <div class="hero-scroll">[ SCROLL TO EXPLORE ]</div>
+</div>
+
+<!-- STATS -->
+<section>
+  <div class="stat-row">
+    <div class="stat-item">
+      <span class="stat-value">5</span>
+      <span class="stat-label">Kernel Endpoints</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value">2</span>
+      <span class="stat-label">Architecture Layers</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value">AI</span>
+      <span class="stat-label">Pattern Engine</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value">CTI</span>
+      <span class="stat-label">OpenCTI Integrated</span>
+    </div>
+  </div>
+
+  <!-- ARCHITECTURE OVERVIEW -->
+  <div id="architecture" class="section-header">
+    <div class="section-label">&gt;_ 01 // OVERVIEW</div>
+    <h2 class="section-title">THE WORKFLOW <span>&amp; ARCHITECTURE</span></h2>
+  </div>
+
+  <div class="flow-strip anim-border">
+    <div class="flow-node">
+      <div class="flow-icon">🖥️</div>
+      <div class="flow-label">5 Endpoints</div>
+    </div>
+    <div class="flow-arrow">──▶</div>
+    <div class="flow-node">
+      <div class="flow-icon">⚙️</div>
+      <div class="flow-label">Kernel Drivers</div>
+    </div>
+    <div class="flow-arrow">──▶</div>
+    <div class="flow-node">
+      <div class="flow-icon green">📄</div>
+      <div class="flow-label green">JSON / JSONL Logs</div>
+    </div>
+    <div class="flow-arrow">──▶</div>
+    <div class="flow-node">
+      <div class="flow-icon pink">🔗</div>
+      <div class="flow-label pink">Correlator</div>
+    </div>
+    <div class="flow-arrow">──▶</div>
+    <div class="flow-node">
+      <div class="flow-icon orange">🤖</div>
+      <div class="flow-label orange">AI / OpenCTI</div>
+    </div>
+    <div class="flow-arrow">──▶</div>
+    <div class="flow-node">
+      <div class="flow-icon">📊</div>
+      <div class="flow-label">SOC Dashboard</div>
+    </div>
+  </div>
+
+  <p style="font-size:14px;color:#4a6f8a;font-family:'Share Tech Mono',monospace;margin-bottom:40px;padding-left:4px;">
+    // All endpoints generate logs saved as JSON / JSONL → correlated by common key points → scored by AI model → surfaced to SOC analysts
+  </p>
+</section>
+
+<!-- KERNEL DRIVERS / ENDPOINTS -->
+<section id="endpoints">
+  <div class="section-header">
+    <div class="section-label">&gt;_ 02 // DATA SOURCES</div>
+    <h2 class="section-title">KERNEL DRIVERS &amp; <span>ENDPOINTS</span></h2>
+  </div>
+
+  <div class="endpoints-grid">
+
+    <div class="endpoint-card">
+      <div class="ep-number">// ENDPOINT 01</div>
+      <div class="ep-title">PROCESS ENDPOINT</div>
+      <div class="ep-source">Microsoft-Windows-Kernel-Process</div>
+      <div class="ep-method">Collects data via ETW (Event Tracing for Windows) session. Monitors all process creation, termination, and thread activity at the kernel level.</div>
+      <div class="ep-guid">GUID: 22FB2CD6-0E7B-422B-A0C7-2FAD1FD0E716</div>
+    </div>
+
+    <div class="endpoint-card">
+      <div class="ep-number">// ENDPOINT 02</div>
+      <div class="ep-title">NETWORK ENDPOINT</div>
+      <div class="ep-source">Npcap (NDIS filter driver) + IP Helper API</div>
+      <div class="ep-method">Captures raw packets via pcap_loop on all network adapters. No pure ETW — uses deep packet inspection at the NDIS filter driver level.</div>
+      <div class="ep-guid">Npcap NDIS Packet Filter Driver</div>
+    </div>
+
+    <div class="endpoint-card">
+      <div class="ep-number">// ENDPOINT 03</div>
+      <div class="ep-title">APPLICATION LOG</div>
+      <div class="ep-source">PowerShell ETW + WMI-Activity + Security &amp; Defender</div>
+      <div class="ep-method">Collects via ETW + EvtSubscribe (Windows Event Log). Monitors PowerShell execution, WMI activity, and Security/Windows Defender event channels.</div>
+      <div class="ep-guid">Microsoft-Windows-PowerShell // Microsoft-Windows-WMI-Activity</div>
+    </div>
+
+    <div class="endpoint-card">
+      <div class="ep-number">// ENDPOINT 04</div>
+      <div class="ep-title">FILE ENDPOINT (FIM)</div>
+      <div class="ep-source">Microsoft-Windows-Kernel-File</div>
+      <div class="ep-method">File Integrity Monitoring via ETW session. Tracks file create, write, delete, rename events at the kernel filter driver level.</div>
+      <div class="ep-guid">GUID: EDD08927-9CC4-4E65-B970-C2560FB5C289</div>
+    </div>
+
+    <div class="endpoint-card">
+      <div class="ep-number">// ENDPOINT 05</div>
+      <div class="ep-title">USB ENDPOINT</div>
+      <div class="ep-source">WM_DEVICECHANGE (PnP) + SetupDi APIs</div>
+      <div class="ep-method">Uses Win32 hidden window to capture PnP kernel notifications + ReadDirectoryChangesW. Detects USB device insertion, removal, and storage access.</div>
+      <div class="ep-guid">PnP Kernel Notifications + SetupDi API</div>
+    </div>
+
+  </div>
+
+  <!-- FULL TABLE -->
+  <div style="margin-top:40px;overflow-x:auto;">
+    <table class="cyber-table">
+      <thead>
+        <tr>
+          <th>Endpoint</th>
+          <th>Kernel / Data Source</th>
+          <th>Collection Method</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1. Process Endpoint</td>
+          <td>Microsoft-Windows-Kernel-Process provider</td>
+          <td>ETW session (GUID: 22FB2CD6-0E7B-422B-A0C7-2FAD1FD0E716)</td>
+        </tr>
+        <tr>
+          <td>2. Network Endpoint</td>
+          <td>Npcap (NDIS packet filter driver) + IP Helper API</td>
+          <td>pcap_loop on network adapters (no pure ETW)</td>
+        </tr>
+        <tr>
+          <td>3. Application Log</td>
+          <td>Microsoft-Windows-PowerShell + Microsoft-Windows-WMI-Activity (ETW) + Security &amp; Windows Defender channels</td>
+          <td>ETW + EvtSubscribe (Windows Event Log)</td>
+        </tr>
+        <tr>
+          <td>4. File Endpoint (FIM)</td>
+          <td>Microsoft-Windows-Kernel-File provider</td>
+          <td>ETW session (GUID: EDD08927-9CC4-4E65-B970-C2560FB5C289)</td>
+        </tr>
+        <tr>
+          <td>5. USB Endpoint</td>
+          <td>WM_DEVICECHANGE (PnP kernel notifications) + SetupDi APIs</td>
+          <td>Win32 hidden window + ReadDirectoryChangesW</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- LAYERS -->
+<section id="layers">
+  <div class="section-header">
+    <div class="section-label">&gt;_ 03 // PROCESSING PIPELINE</div>
+    <h2 class="section-title">ARCHITECTURE <span>LAYERS</span></h2>
+  </div>
+
+  <div class="layers-wrap">
+    <div class="layer-box">
+      <div class="layer-tag">LAYER 2</div>
+      <div class="layer-title">PROCESSING DASHBOARD</div>
+      <div class="layer-items">
+        <div class="layer-item">
+          <div class="layer-item-icon">🌐</div>
+          <div class="layer-item-content">
+            <h4>GLOBAL FILTER</h4>
+            <p>Applies system-wide filtering rules before events enter the correlation engine. Reduces noise and focuses on security-relevant events.</p>
+          </div>
+        </div>
+        <div class="layer-item pink">
+          <div class="layer-item-icon">🔗</div>
+          <div class="layer-item-content">
+            <h4>CORRELATOR</h4>
+            <p>Takes multiple logs from all endpoints and correlates them using common key points — grouping related events into unified security incidents.</p>
+          </div>
+        </div>
+        <div class="layer-item green">
+          <div class="layer-item-icon">🤖</div>
+          <div class="layer-item-content">
+            <h4>AI / OPENCTI</h4>
+            <p>Validates correlated events using threat intelligence. Performs pattern matching against known attack signatures and threat actor TTPs.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layer-box">
+      <div class="layer-tag">LAYER 1</div>
+      <div class="layer-title">INTERFACE DISPLAY</div>
+      <div class="layer-items">
+        <div class="layer-item green">
+          <div class="layer-item-icon">📋</div>
+          <div class="layer-item-content">
+            <h4>ALL .EXE PROCESSES DISPLAYED</h4>
+            <p>All running processes and their associated .exe files are displayed in the interface with full process tree visibility and metadata.</p>
+          </div>
+        </div>
+        <div class="layer-item">
+          <div class="layer-item-icon">📊</div>
+          <div class="layer-item-content">
+            <h4>REAL-TIME MONITORING</h4>
+            <p>Live telemetry streams from all 5 endpoints, presented in a unified dashboard view with timeline and severity-based sorting.</p>
+          </div>
+        </div>
+        <div class="layer-item pink">
+          <div class="layer-item-icon">🚨</div>
+          <div class="layer-item-content">
+            <h4>ALERT SURFACE</h4>
+            <p>Correlated and AI-scored alerts surfaced to SOC analysts with full context, predicted next steps, and vulnerability mapping.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOC DASHBOARD -->
+<section id="soc">
+  <div class="section-header">
+    <div class="section-label">&gt;_ 04 // INTELLIGENCE ENGINE</div>
+    <h2 class="section-title">SOC DASHBOARD &amp; <span>AI ANALYSIS</span></h2>
+  </div>
+
+  <div class="soc-grid">
+    <div class="soc-card">
+      <div class="soc-card-icon">🧠</div>
+      <div class="soc-card-title">AI MODEL — SCORE ALLOCATION</div>
+      <p>By training the AI model on historical attack data, the system allocates a threat score to every log entry and data event. It identifies pattern-based attacks in real-time, ranking events by severity and confidence level.</p>
+    </div>
+
+    <div class="soc-card pink">
+      <div class="soc-card-icon">🔮</div>
+      <div class="soc-card-title">OPENCTI — THREAT PREDICTION</div>
+      <p>Using OpenCTI threat intelligence data, the system goes beyond detection to <strong style="color:var(--pink)">predict</strong> potential threats before they fully materialize. Historical TTP correlation enables proactive defence postures.</p>
+    </div>
+
+    <div class="soc-card full">
+      <div class="soc-card-icon">🛡️</div>
+      <div class="soc-card-title">WITH OPENCTI, THE SYSTEM CAN:</div>
+      <ul class="feature-list pink">
+        <li><strong>Detect Suspicious Activity:</strong> Analyse threat feeds, logs, and telemetry data to identify potential security issues before they escalate into full breaches.</li>
+        <li><strong>Predict Threats:</strong> Use machine learning, pattern recognition, and analytics to forecast potential attacks or vulnerabilities specific to your environment and endpoint context.</li>
+      </ul>
+    </div>
+
+    <div class="soc-card full green">
+      <div class="soc-card-icon">⚡</div>
+      <div class="soc-card-title">AI FINAL ANALYSIS — WHAT THE ENGINE SURFACES</div>
+      <ul class="feature-list green">
+        <li>Based on all telemetry sources, the AI flags <strong style="color:var(--green)">suspicious activities and events</strong> with confidence scores, full context, and source endpoint attribution.</li>
+        <li>Identifies <strong style="color:var(--green)">vulnerable areas and loopholes</strong> in the system — predicting which attack vectors are most likely to be exploited given the current environment state.</li>
+        <li>If a <strong style="color:var(--green)">virus or malware</strong> is recognised, the AI attempts to <strong>predict its next step</strong> — enabling SOC analysts to get ahead of the threat and contain it before propagation.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- VIDEO SECTION -->
+<div id="video">
+  <section style="padding:0;">
+    <div class="section-header" style="margin-bottom:48px;">
+      <div class="section-label">&gt;_ 05 // DEMO</div>
+      <h2 class="section-title">PROJECT <span>WALKTHROUGH VIDEO</span></h2>
+    </div>
+    <div class="video-wrap">
+      <div class="video-container">
+        <!-- 
+          TO ADD YOUR VIDEO: Replace the placeholder div below with:
+          <iframe src="https://www.youtube.com/embed/YOUR_VIDEO_ID" allowfullscreen></iframe>
+          OR for a local video:
+          <video controls src="your-video.mp4" style="position:absolute;inset:0;width:100%;height:100%;"></video>
+        -->
+        <div class="video-placeholder">
+          <div class="video-placeholder-icon">▶</div>
+          <p>// INSERT YOUR VIDEO HERE</p>
+          <p style="font-size:10px;color:#2a3a4a;letter-spacing:2px;">REPLACE PLACEHOLDER WITH IFRAME OR VIDEO TAG</p>
+        </div>
+      </div>
+      <div style="margin-top:16px;font-family:'Share Tech Mono',monospace;font-size:10px;color:#2a3a4a;letter-spacing:3px;text-align:center;">
+        SOC SENTINEL // ARCHITECTURE WALKTHROUGH // KERNEL-LEVEL EDR DEMO
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">SOC<span>//</span>SENTINEL</div>
+  <div class="footer-text">KERNEL-LEVEL TELEMETRY & AI THREAT INTELLIGENCE</div>
+  <div class="footer-text">THE WORKFLOW / ARCHITECTURE</div>
+</footer>
+
+<script>
+  // Intersection observer for fade-in animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.endpoint-card, .soc-card, .layer-box, .stat-item').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    observer.observe(el);
+  });
+
+  // Glitch random trigger
+  setInterval(() => {
+    const glitch = document.querySelector('.glitch');
+    if (glitch) {
+      glitch.style.animation = 'none';
+      setTimeout(() => { glitch.style.animation = ''; }, 50);
+    }
+  }, 5000);
+</script>
+</body>
+</html>
