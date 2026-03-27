@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment Guide | SentinelAI</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================
+           CORE THEME: GLASSMORPHISM + VIDEO BG
+           ========================================== */
+        :root {
+            --bg-panel: rgba(5, 5, 5, 0.35);    /* Highly transparent black */
+            --primary: #00ff41;                 /* Matrix/Neon Green */
+            --primary-glow: rgba(0, 255, 65, 0.5); 
+            --text-main: #e0e0e0;               /* Brighter text for readability */
+            --text-bright: #ffffff;
+            --border: rgba(0, 255, 65, 0.2);    /* Subtle green glowing borders */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000;
+            color: var(--text-main);
+            font-family: 'Roboto Mono', monospace;
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* BACKGROUND VIDEO CSS - Now much more visible */
+        #bg-video {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            z-index: -1;
+            object-fit: cover;
+            opacity: 0.45; /* Increased opacity so you can see the video */
+        }
+
+        .master-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 50px 30px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* HEADER - Glass effect */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--primary-glow);
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 8px;
+            animation: fadeInDown 1s ease-out;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5em;
+            font-weight: 900;
+            color: var(--text-bright);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            text-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+        }
+
+        .nav-btn {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: 10px 20px;
+            text-decoration: none;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .nav-btn:hover {
+            background-color: var(--primary);
+            color: #000;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        /* PANELS - Glassmorphism applied */
+        .step-panel {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border);
+            padding: 40px;
+            border-radius: 8px;
+            
+            /* The Magic Glass Blur */
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px);
+            
+            border-left: 4px solid var(--primary);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
+            animation: fadeInUp 1s ease-out both;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .step-panel h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+        }
+
+        .step-panel p {
+            margin-bottom: 15px;
+            font-size: 0.95em;
+        }
+
+        /* DOWNLOAD BUTTONS */
+        .download-btn {
+            display: inline-block;
+            background-color: rgba(0, 255, 65, 0.1);
+            color: var(--primary);
+            text-decoration: none;
+            padding: 12px 25px;
+            border: 1px solid var(--primary);
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            margin-top: 15px;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .download-btn:hover {
+            background-color: var(--primary);
+            color: #000;
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        /* CODE & FILE BLOCKS */
+        .file-box {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+        }
+
+        .file-box strong {
+            color: var(--text-bright);
+            font-size: 1.1em;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .highlight {
+            color: var(--primary);
+            font-weight: bold;
+            text-shadow: 0 0 5px var(--primary-glow);
+        }
+        
+        .warning-text {
+            color: #ffaa00;
+            font-size: 0.85em;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <video autoplay muted loop id="bg-video">
+        <source src="https://github.com/NIKHIL867-M/websss/raw/main/vedios/h.mp4" type="video/mp4">
+    </video>
+
+    <div class="master-container">
+
+        <header>
+            <h1 class="hero-title">SYSTEM DEPLOYMENT</h1>
+            <a href="index.html" class="nav-btn">< Return to Dashboard</a>
+        </header>
+
+        <section class="step-panel" style="animation-delay: 0.2s;">
+            <h2>01 / Prerequisite: API Keys</h2>
+            <p>To fully utilize the Layer 3 Threat Intelligence Analyzer, you must link the system to real-world threat databases.</p>
+            <p>Before running the backend, obtain your personal API keys from <strong>AbuseIPDB</strong> and <strong>VirusTotal</strong> and insert them into the environment variables / backend configuration.</p>
+        </section>
+
+        <section class="step-panel" style="animation-delay: 0.4s;">
+            <h2>02 / Layer 1: Master Control Node (C++)</h2>
+            <p>This folder contains the core TITAN EDR agent endpoints (Process, Network, AMSI, etc.) compiled in C++.</p>
+            
+            <a href="https://github.com/NIKHIL867-M/SRIJAN/tree/main/master" target="_blank" class="download-btn">DOWNLOAD 'MASTER' REPOSITORY</a>
+            
+            <div class="file-box">
+                <strong>>_ Execution Instructions:</strong>
+                <p>1. Download the repository as a full <code>.zip</code> file and extract it.</p>
+                <p>2. Navigate to the extracted folder.</p>
+                <p>3. Right-click <span class="highlight">dashboard.exe</span> and select <strong>"Run as Administrator"</strong>. <em>(Admin privileges are strictly required to hook into kernel-level ETW tracing).</em></p>
+            </div>
+        </section>
+
+        <section class="step-panel" style="animation-delay: 0.6s;">
+            <h2>03 / Layer 2 & 3: AI Brain & Threat Intel (Python)</h2>
+            <p>This folder contains the Python Machine Learning engine, the JSON output parsers, and the backend API architecture.</p>
+
+            <a href="https://github.com/NIKHIL867-M/SRIJAN/tree/main/correalator" target="_blank" class="download-btn">DOWNLOAD 'CORRELATOR' REPOSITORY</a>
+
+            <p>Save all the <code>.bat</code> execution files inside the root <code>correalator/</code> directory (the same level as the <code>backend/</code> and <code>frontend/</code> folders). Double-click the following scripts to launch the system components:</p>
+
+            <div class="file-box">
+                <strong>run_full_demo.bat </strong>
+                <p>Executes the core Threat Analyzer pipeline and automatically launches the frontend web interface after a 3-second initialization delay.</p>
+            </div>
+
+            <div class="file-box">
+                <strong>run_sentinel_ai.bat</strong>
+                <p>Wakes up the <code>sentinel_ai_brain.py</code> script. This loads the XGBoost <code>.pkl</code> model into memory to evaluate correlated telemetry events.</p>
+            </div>
+
+            <div class="file-box">
+                <strong>run_c_file.bat</strong>
+                <p>Executes the custom <code>c.py</code> script for localized event processing and JSON output formatting.</p>
+            </div>
+            
+            <p class="warning-text">Note: Ensure Python 3.12+ is installed with necessary libraries (pandas, scikit-learn, xgboost, flask) before executing the batch files.</p>
+        </section>
+
+    </div>
+
+</body>
+</html>
